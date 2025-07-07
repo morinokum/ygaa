@@ -1,5 +1,0 @@
-timestamp,epochs,batch_size,test_loss,test_accuracy,output_path
-2025-07-07 01:08:39,1,32,0.1575,0.9531,/home/hirosi/my_yggdrasil_framework/test_model_1.keras
-2025-07-07 01:12:35,2,64,0.1257,0.9640,/home/hirosi/my_yggdrasil_framework/test_model_2.keras
-2025-07-07 01:23:19,1,32,0.1542,0.9547,/home/hirosi/my_yggdrasil_framework/trained_models/mnist_model_final.keras
-2025-07-07 01:25:32,500,123,4.6264,
