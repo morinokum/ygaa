@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/040e50a3799947998b431e3089685a00/artifacts
+end_time: 1751888545162
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 040e50a3799947998b431e3089685a00
+run_name: orderly-goat-815
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751888544504
+status: 3
+tags: []
+user_id: hirosi

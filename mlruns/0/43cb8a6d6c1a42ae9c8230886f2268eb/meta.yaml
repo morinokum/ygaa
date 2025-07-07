@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/43cb8a6d6c1a42ae9c8230886f2268eb/artifacts
+end_time: 1751888079125
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 43cb8a6d6c1a42ae9c8230886f2268eb
+run_name: rambunctious-gnu-639
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751888078562
+status: 3
+tags: []
+user_id: hirosi

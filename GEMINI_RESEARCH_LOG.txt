@@ -1,0 +1,87 @@
+# 進捗履歴
+
+*   **日付:** 2025-07-07
+*   **担当:** Gemini
+*   **件名:** パイプラインのロギング機構をMLflowからCSVファイルに変更
+*   **詳細:**
+    *   `pipeline_orchestrator` 実行時に `mlflow.exceptions.MlflowException` が発生。原因は、MLflowがアーティファクト保存時にHTTP/HTTPSのトラッキングURIを要求するのに対し、ローカルのファイルパスしか設定されていなかったため。
+    *   この問題を解決し、パイプラインをよりシンプルかつ堅牢にするため、`my_yggdrasil_framework_pipeline_complete` の実装を参考に、MLflowへの依存をなくし、実験結果をCSVファイル (`logs/pipeline_experiment_log.csv`) に追記する方式に変更した。
+    *   関連ファイル: `agents/pipeline_orchestrator.py`, `training_scripts/mnist_trainer.py`
+
+---
+
+# Yggdrasil Agent Framework 開発ログ
+
+## 概要
+このログは、Yggdrasil Agent Framework の開発における主要な進捗、決定事項、および実装された機能の記録です。特に、汎用的なAI開発ワークフローの自動化とMLflow連携に焦点を当てています。
+
+## 開発フェーズと成果
+
+### フェーズ1: 基本フレームワークの確立とエージェントの動的実行
+- **目標:** Yggdrasilフレームワークの基本的なディスパッチャ機能を確立し、エージェントを動的にロード・実行できるようにする。
+- **実装:**
+    - `yggdrasil.py`: メインディスパッチャ。コマンドライン引数のパース、設定のマージ、エージェントの動的インポートと実行を管理。
+    - `utils/logger.py`, `utils/config_utils.py`: ロギングと設定管理のユーティリティ。
+- **成果:**
+    - `yggdrasil.py <agent_name> [--set KEY=VALUE] [--agent-set KEY=VALUE]` 形式でのエージェント実行が可能になった。
+    - 仮想環境の導入により、依存関係の管理がクリーンになった。
+- **関連ファイル:** `yggdrasil.py`, `agents/hello_agent.py` (初期テスト用)
+- **バックアップ:** `my_yggdrasil_framework_base`
+
+### フェーズ2: 汎用学習エージェント (`model_trainer`) の実装
+- **目標:** MNISTデータセットの学習を自動化する `model_trainer` エージェントを作成し、パラメータ化、モデル保存、実験結果のロギング機能を追加する。
+- **実装:**
+    - `training_scripts/mnist_trainer.py`: TensorFlow/Kerasを使用したMNIST学習スクリプト。`--epochs`, `--batch_size`, `--output_path`, `--log_file`, `--input_data_path` 引数を受け取るように汎用化。
+    - `agents/model_trainer.py`: 汎用的な学習エージェント。`script_path` を含む任意の引数を学習スクリプトに渡し、その出力をリアルタイムで表示する。
+    - `training_scripts/simple_regression.py`: 汎用性確認のためのscikit-learn回帰モデル学習スクリプト。
+- **成果:**
+    - `model_trainer` エージェントが、指定されたスクリプトとパラメータで学習を実行し、モデルを保存し、CSVに結果を記録できるようになった。
+    - `model_trainer` が任意のPython学習スクリプトを実行できる汎用性を獲得した。
+- **関連ファイル:** `agents/model_trainer.py`, `training_scripts/mnist_trainer.py`, `training_scripts/simple_regression.py`
+- **バックアップ:** `my_yggdrasil_framework_step1_complete`
+
+### フェーズ3: シンプルなAIワークフローパイプラインの構築
+- **目標:** 「データ前処理 → 学習 → 評価」という一連のAIワークフローを自動実行するパイプラインを構築する。
+- **実装:**
+    - `training_scripts/data_preprocessor.py`: ダミーデータを生成し、NPZ形式で保存するスクリプト。
+    - `training_scripts/model_evaluator.py`: 学習済みモデルを評価し、結果をログに記録するスクリプト。
+    - `agents/pipeline_orchestrator.py`: `data_preprocessor`, `model_trainer`, `model_evaluator` の各エージェントを順番に呼び出し、ステップ間のデータフローを管理するオーケストレーターエージェント。
+- **成果:**
+    - `yggdrasil.py pipeline_orchestrator` コマンド一つで、AIワークフロー全体が自動実行されるようになった。
+    - 各ステップの出力が次のステップの入力として正しく連携されることを確認。
+- **関連ファイル:** `training_scripts/data_preprocessor.py`, `training_scripts/model_evaluator.py`, `agents/pipeline_orchestrator.py`
+- **バックアップ:** `my_yggdrasil_framework_pipeline_complete`
+
+### フェーズ4: MLflow連携の導入と親ラン・子ランの統合
+- **目標:** 各学習・評価ステップのパラメータと結果をMLflowに自動的に記録し、MLflow UIで確認できるようにする。さらに、親ランと子ランの関係を構築し、パイプライン全体を一つの大きな実験として管理できるようにする。
+- **実装:**
+    - `pipeline_orchestrator.py`: 親MLflowランを開始し、その `run_id` を子エージェントに渡すように修正。
+    - `mnist_trainer.py`: `mlflow.start_run(nested=True)` を使用して、親ランの子ランとして実行されるように修正。
+    - `model_evaluator.py`: `mlflow.start_run(nested=True)` を使用して、親ランの子ランとして実行されるように修正。
+    - `model_trainer.py`: `data_preprocessor.py` を実行する際には `parent_run_id` を渡さないように修正。
+- **成果:**
+    - パイプライン実行時に、MLflowに実験が記録され、パラメータ、指標、モデルが追跡されるようになった。
+    - `mlflow ui` コマンドで、ブラウザから実験結果を視覚的に確認できるようになった。
+    - MLflow UIで親ランの下に各ステップの子ランがネストされて表示され、パイプライン全体が単一の実験として管理され、各ステップの詳細が子ランとして追跡されるようになった。
+- **関連ファイル:** `training_scripts/mnist_trainer.py`, `training_scripts/model_evaluator.py`, `agents/pipeline_orchestrator.py`
+- **バックアップ:** `my_yggdrasil_framework_mlflow_complete`
+
+## 次の計画（ジェミニが続きを作成する際の考慮事項）
+
+### 1. MLflow UIでの実験管理の徹底
+- 現在、MLflowは各スクリプト内で独立して `start_run()` されています。より高度なMLflowの利用方法として、親ランと子ランの関係を構築し、パイプライン全体を一つの大きな実験として管理できるように検討が必要です。
+- `mlflow.set_experiment()` を使用して、実験名を明示的に設定できるようにすると良いでしょう。
+
+### 2. パイプラインの柔軟性向上
+- 現在の `pipeline_orchestrator` は、ハードコードされたエージェントの呼び出し順序を持っています。YAMLなどの設定ファイルでパイプラインのステップと、各ステップに渡すパラメータを定義できるようにすると、より柔軟なワークフロー構築が可能になります。
+- 各ステップの出力（ファイルパスなど）を、次のステップの入力として動的に解決するメカニズムを強化する必要があります。
+
+### 3. モデルのデプロイと推論エージェント
+- 学習済みモデルを保存するだけでなく、そのモデルをロードして推論を行うエージェント (`model_inference_agent`) の実装は、AIワークフローの最終段階として重要です。
+- MLflowのモデルレジストリ機能との連携も検討できます。
+
+### 4. エラーハンドリングとレポート
+- 現在のエラーハンドリングは基本的なものです。パイプラインの途中でエラーが発生した場合に、より詳細な情報（どのステップで、どのようなエラーが発生したか）をレポートする仕組みを強化する必要があります。
+
+### 5. ドキュメンテーションとユーザーガイド
+- このフレームワークを「商品」として考える場合、ユーザーが簡単に使い始められるように、詳細なドキュメンテーションと使用例が必要です。

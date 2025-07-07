@@ -1,0 +1,44 @@
+## Yggdrasil Agent Framework Development Log
+
+### 2025年7月6日 - テストフレームワークの統合 (pytest)
+
+**目標:** 「Yggdrasil エージェントフレームワーク」にテストフレームワークを統合する。
+
+**実施内容:**
+1.  `my_yggdrasil_framework` ディレクトリ内に `tests` ディレクトリを作成しました。
+2.  `tests` ディレクトリ内に `conftest.py` を作成しました。
+3.  `my_yggdrasil_framework` ディレクトリ内に仮想環境 (`.venv`) を作成し、その中に `pytest` をインストールしました。
+4.  `yggdrasil.py` の `load_config` 関数をテストするための `test_yggdrasil.py` を作成しました。
+    *   設定ファイルが見つからないケース、JSON解析エラーのケース、正常にロードされるケースをテスト。
+    *   `logger` とファイル操作をモック化して、テストの独立性を確保。
+5.  `yggdrasil.py` の `run_agent` 関数をテストするためのテストケースを `test_yggdrasil.py` に追加しました。
+    *   エージェントファイルが見つからない場合
+    *   エージェントのインポートに失敗した場合
+    *   エージェントに `main` 関数がない、または呼び出し可能でない場合
+    *   エージェントが正常に実行された場合
+    *   エージェントの実行中に例外が発生した場合
+6.  `test_run_agent_no_main_function` のバグを修正しました。
+7.  `agents/` ディレクトリ内の `hello_agent.py` のテストケースを `tests/test_agents.py` に追加しました。
+    *   引数なしで実行した場合の出力確認。
+    *   引数ありで実行した場合の出力確認。
+8.  `my_yggdrasil_framework/agents` ディレクトリ内に `config` ディレクトリを作成しました。
+9.  `yggdrasil.py` を修正し、`load_agent_config` 関数を追加し、`run_agent` 関数でエージェント固有の設定をロードしてエージェントに渡すように変更しました。
+10. `hello_agent.py` を修正し、`main` 関数が設定を受け取れるようにし、その設定を利用する例を追加しました。
+11. `my_yggdrasil_framework/agents/config/hello_agent.json` にサンプル設定ファイルを作成しました。
+12. `test_yggdrasil.py` を更新し、`load_agent_config` のテストと、`run_agent` がエージェント設定を正しく渡すことを確認するテストを追加しました。また、`run_agent` のテストケースで `load_agent_config` を適切にモック化するように修正しました。
+13. `test_agents.py` を更新し、`hello_agent.py` が設定を受け取った場合のテストを追加しました。
+14. すべてのテストを実行し、すべて成功することを確認しました。
+
+### 2025年7月6日 - 設定値の階層化とデフォルト値の導入
+
+**目標:** 「Yggdrasil エージェントフレームワーク」に設定値の階層化とデフォルト値の機能を追加する。
+
+**実施内容:**
+1.  `my_yggdrasil_framework/utils/config_utils.py` ファイルを作成し、複数の設定辞書をマージする `merge_configs` 関数を定義しました。
+2.  `yggdrasil.py` を修正し、`config_utils` をインポートし、`DEFAULT_FRAMEWORK_CONFIG` を定義しました。また、`main()` 関数と `run_agent()` 関数で、デフォルト設定、ロードされた設定、コマンドライン引数を適切にマージするように変更しました。
+3.  `hello_agent.py` を更新し、`DEFAULT_CONFIG` を定義し、`main` 関数内でデフォルト設定と渡された設定をマージするように変更しました。
+4.  `test_yggdrasil.py` を更新し、`merge_configs` 関数のテストケースを追加しました。また、`run_agent` のテストケースを更新し、エージェントのデフォルト設定とファイルからの設定が正しくマージされることを検証するように変更しました。
+5.  `test_agents.py` を更新し、`hello_agent.py` のテストケースを新しい設定マージロジックに合わせて修正しました。
+6.  すべてのテストを実行し、すべて成功することを確認しました。
+
+**結果:** 「設定値の階層化とデフォルト値」の機能が正常に導入され、フレームワーク全体およびエージェントレベルでの設定管理がより柔軟かつ堅牢になりました。すべてのテストもパスし、既存機能への影響がないことを確認しました。
