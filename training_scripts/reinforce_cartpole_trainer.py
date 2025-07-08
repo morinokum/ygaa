@@ -1,4 +1,3 @@
-
 import gymnasium as gym
 import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers
@@ -26,12 +25,12 @@ class REINFORCEAgent:
         return model
 
     def choose_action(self, state):
-        state = np.array(state).reshape(1, -1) # 状態をモデルの入力形式に変換
-        prob_dist = self.policy_network.predict(state, verbose=0)[0]
-        action = np.random.choice(self.action_size, p=prob_dist)
-        return action, prob_dist[action]
+        state_tensor = tf.convert_to_tensor(state[None, :], dtype=tf.float32) # Add batch dimension
+        action_probs = self.policy_network(state_tensor) # Get probabilities from the policy network
+        action = tf.random.categorical(tf.math.log(action_probs), 1)[0, 0].numpy() # Sample action
+        return action, action_probs[0, action] # Return action and its probability tensor
 
-    def learn(self, rewards, log_probs):
+    def learn(self, states, actions, rewards):
         # 割引報酬の計算
         discounted_rewards = []
         cumulative_reward = 0
@@ -46,7 +45,18 @@ class REINFORCEAgent:
 
         # ポリシーネットワークの更新
         with tf.GradientTape() as tape:
-            loss = -tf.reduce_sum(tf.convert_to_tensor(log_probs) * tf.convert_to_tensor(discounted_rewards, dtype=tf.float32))
+            # 状態をテンソルに変換
+            states_tensor = tf.convert_to_tensor(states, dtype=tf.float32)
+            # ポリシーネットワークを再実行して行動確率を取得
+            action_probs = self.policy_network(states_tensor)
+            # 選択された行動の対数確率を計算
+            action_indices = tf.convert_to_tensor(actions, dtype=tf.int32)
+            indices = tf.stack([tf.range(tf.shape(action_indices)[0]), action_indices], axis=1)
+            log_probs = tf.math.log(tf.gather_nd(action_probs, indices))
+            
+            discounted_rewards_tensor = tf.convert_to_tensor(discounted_rewards, dtype=tf.float32)
+            
+            loss = -tf.reduce_sum(log_probs * discounted_rewards_tensor)
         
         grads = tape.gradient(loss, self.policy_network.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.policy_network.trainable_variables))
@@ -65,18 +75,22 @@ def train_reinforce_cartpole(episodes, learning_rate, gamma, output_path, log_fi
     for e in range(episodes):
         state, _ = env.reset()
         done = False
+        states_history = []
+        actions_history = []
         rewards = []
-        log_probs = []
 
         while not done:
-            action, log_prob = agent.choose_action(state)
+            action, _ = agent.choose_action(state) # 確率テンソルはここでは不要
             next_state, reward, done, truncated, _ = env.step(action)
+            
+            states_history.append(state)
+            actions_history.append(action)
             rewards.append(reward)
-            log_probs.append(tf.math.log(log_prob)) # log(prob) を保存
+            
             state = next_state
             done = done or truncated
 
-        agent.learn(rewards, log_probs)
+        agent.learn(states_history, actions_history, rewards) # 履歴を learn に渡す
         
         total_reward = sum(rewards)
         episode_rewards.append(total_reward)

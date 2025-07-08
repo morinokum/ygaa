@@ -76,8 +76,10 @@ def main(args, config):
         if e.stdout:
             print("--- stdout/stderr ---", file=sys.stderr)
             print(e.stdout, file=sys.stderr)
-        except Exception as e:
-            print(f"予期せぬエラーが発生しました: {e}", file=sys.stderr)
+        sys.exit(1) # パイプラインを停止
+    except Exception as e:
+        print(f"予期せぬエラーが発生しました: {e}", file=sys.stderr)
+        sys.exit(1) # パイプラインを停止
 
     print("Reinforcement Learner Agent: 終了")
 

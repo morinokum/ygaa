@@ -111,6 +111,14 @@ def main(args, config):
         }
         run_agent("model_trainer", mnist_trainer_config)
 
+        # レポート生成エージェントを呼び出す
+        report_output_filename = os.path.splitext(os.path.basename(data_file_path))[0] + "_Report.md"
+        report_generator_config = {
+            "log_file_path": mnist_trainer_config["log_file"],
+            "report_output_path": os.path.join(PROJECT_ROOT, report_output_filename)
+        }
+        run_agent("report_generator_agent", report_generator_config)
+
     elif predicted_log_type == "reinforce":
         print("強化学習データタイプを検出しました。CartPole強化学習モデルの学習を開始します。")
         reinforce_trainer_config = {
@@ -121,6 +129,14 @@ def main(args, config):
             "gamma": 0.99 # デフォルトの割引率
         }
         run_agent("reinforcement_learner", reinforce_trainer_config)
+
+        # レポート生成エージェントを呼び出す
+        report_output_filename = os.path.splitext(os.path.basename(data_file_path))[0] + "_Report.md"
+        report_generator_config = {
+            "log_file_path": reinforce_trainer_config["log_file"],
+            "report_output_path": os.path.join(PROJECT_ROOT, report_output_filename)
+        }
+        run_agent("report_generator_agent", report_generator_config)
 
     else:
         print(f"警告: 未知のデータタイプ '{predicted_log_type}' が予測されました。学習エージェントは呼び出されません。", file=sys.stderr)
