@@ -1,3 +1,4 @@
+
 import tensorflow as tf
 import argparse
 import os
@@ -5,7 +6,7 @@ import csv
 from datetime import datetime
 import numpy as np
 
-def train_mnist(epochs, batch_size, output_path, log_file, input_data_path):
+def train_mnist(epochs, batch_size, learning_rate, output_path, log_file, input_data_path):
     # 1. データのロードと前処理
     if input_data_path:
         print(f"--- データロード中: {input_data_path} ---")
@@ -42,14 +43,15 @@ def train_mnist(epochs, batch_size, output_path, log_file, input_data_path):
     ])
 
     # 3. モデルのコンパイル
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
-        optimizer='adam',
+        optimizer=optimizer,
         loss='categorical_crossentropy',
         metrics=['accuracy']
     )
 
     # 4. モデルの学習
-    print(f"--- MNISTモデルの学習を開始します (epochs: {epochs}, batch_size: {batch_size}) ---")
+    print(f"--- MNISTモデルの学習を開始します (epochs: {epochs}, batch_size: {batch_size}, learning_rate: {learning_rate}) ---")
     history = model.fit(
         x_train,
         y_train,
@@ -86,7 +88,7 @@ def train_mnist(epochs, batch_size, output_path, log_file, input_data_path):
         
         file_exists = os.path.isfile(log_file)
         with open(log_file, 'a', newline='') as csvfile:
-            fieldnames = ['timestamp', 'epochs', 'batch_size', 'test_loss', 'test_accuracy', 'output_path']
+            fieldnames = ['timestamp', 'epochs', 'batch_size', 'learning_rate', 'test_loss', 'test_accuracy', 'output_path']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             if not file_exists:
@@ -96,6 +98,7 @@ def train_mnist(epochs, batch_size, output_path, log_file, input_data_path):
                 'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'epochs': epochs,
                 'batch_size': batch_size,
+                'learning_rate': learning_rate,
                 'test_loss': f"{test_loss:.4f}",
                 'test_accuracy': f"{test_accuracy:.4f}",
                 'output_path': output_path
@@ -106,9 +109,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MNISTモデルの学習スクリプト')
     parser.add_argument('--epochs', type=int, default=5, help='学習のエポック数')
     parser.add_argument('--batch_size', type=int, default=32, help='学習のバッチサイズ')
+    parser.add_argument('--learning_rate', type=float, default=0.001, help='オプティマイザの学習率')
     parser.add_argument('--output_path', type=str, default=None, help='学習済みモデルの保存先パス')
     parser.add_argument('--log_file', type=str, default=None, help='実験結果の記録用CSVファイル')
     parser.add_argument('--input_data_path', type=str, default=None, help='入力データファイルへのパス (NPZ形式)')
     args = parser.parse_args()
 
-    train_mnist(epochs=args.epochs, batch_size=args.batch_size, output_path=args.output_path, log_file=args.log_file, input_data_path=args.input_data_path)
+    train_mnist(epochs=args.epochs, batch_size=args.batch_size, learning_rate=args.learning_rate, output_path=args.output_path, log_file=args.log_file, input_data_path=args.input_data_path)

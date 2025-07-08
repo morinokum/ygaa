@@ -14,7 +14,7 @@ from csv_analyzer import analyze_csv_features
 
 # デフォルト設定
 DEFAULT_CONFIG = {
-    "log_file_path": os.path.join(PROJECT_ROOT, "logs", "pipeline_experiment_log_migrated.csv"),
+    "log_file_path": os.path.join(PROJECT_ROOT, "logs", "pipeline_experiment_log.csv"),
     "report_output_path": os.path.join(PROJECT_ROOT, "Experiment_Report.md"),
     "classifier_model_path": os.path.join(PROJECT_ROOT, "trained_models", "csv_classifier_model.joblib")
 }
