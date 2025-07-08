@@ -34,13 +34,15 @@ def run_agent(agent_name, agent_config):
     ]
 
     # エージェント固有の設定を --agent-set 形式で追加
-    # script_path は特別扱いし、それ以外の引数を渡す
-    script_to_run = agent_config["script_path"]
-    agent_args = {
-        k: v for k, v in agent_config.items() if k != "script_path"
-    }
-
-    command.extend(["--agent-set", f"script_path={script_to_run}"])
+    # script_path は model_trainer の場合のみ特別扱い
+    if agent_name == "model_trainer":
+        script_to_run = agent_config["script_path"]
+        agent_args = {
+            k: v for k, v in agent_config.items() if k != "script_path"
+        }
+        command.extend(["--agent-set", f"script_path={script_to_run}"])
+    else:
+        agent_args = agent_config
 
     for key, value in agent_args.items():
         # パスは絶対パスに変換して渡す
@@ -106,6 +108,13 @@ def main(args, config):
         "log_file": experiment_log_file # 学習ログと同じファイルに追記
     }
     run_agent("model_trainer", model_evaluator_config)
+
+    # 3. レポート生成ステップ
+    report_generator_config = {
+        "log_file_path": experiment_log_file,
+        "report_output_path": os.path.join(PROJECT_ROOT, "Experiment_Report.md") # デフォルトのレポート出力パス
+    }
+    run_agent("report_generator_agent", report_generator_config)
 
     print("Pipeline Orchestrator Agent: 終了")
 

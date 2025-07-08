@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/2bdd39583ac24d5595c96da0d75cec9a/artifacts
+end_time: 1751890660369
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2bdd39583ac24d5595c96da0d75cec9a
+run_name: stylish-duck-364
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751890660141
+status: 4
+tags: []
+user_id: hirosi

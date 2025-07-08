@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/01df8371b17c42a49365da24484a9805/artifacts
+end_time: 1751840357974
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 01df8371b17c42a49365da24484a9805
+run_name: Yggdrasil_Pipeline_Run
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751840319453
+status: 3
+tags: []
+user_id: hirosi

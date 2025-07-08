@@ -2,3 +2,6 @@ tensorflow
 numpy
 Pillow
 mlflow
+gymnasium
+scikit-learn
+joblib
