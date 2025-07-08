@@ -111,6 +111,14 @@ def main(args, config):
         }
         run_agent("model_trainer", mnist_trainer_config)
 
+        # モデル評価エージェントを呼び出す
+        model_evaluator_config = {
+            "model_path": mnist_trainer_config["output_path"],
+            "test_data_path": "dummy_path_for_mnist_evaluation.npz", # model_evaluator_agentが内部でload_data()を呼ぶためダミー
+            "evaluation_log_file": os.path.join(PROJECT_ROOT, "logs", "model_evaluation_log.csv")
+        }
+        run_agent("model_evaluator_agent", model_evaluator_config)
+
         # レポート生成エージェントを呼び出す
         report_output_filename = os.path.splitext(os.path.basename(data_file_path))[0] + "_Report.md"
         report_generator_config = {
@@ -118,6 +126,13 @@ def main(args, config):
             "report_output_path": os.path.join(PROJECT_ROOT, report_output_filename)
         }
         run_agent("report_generator_agent", report_generator_config)
+
+        # モデル選択エージェントを呼び出す
+        model_selector_config = {
+            "evaluation_log_file": model_evaluator_config["evaluation_log_file"],
+            "output_best_model_path": os.path.join(PROJECT_ROOT, "trained_models", "best_model_from_meta.txt")
+        }
+        run_agent("model_selector_agent", model_selector_config)
 
     elif predicted_log_type == "reinforce":
         print("強化学習データタイプを検出しました。CartPole強化学習モデルの学習を開始します。")
@@ -130,6 +145,16 @@ def main(args, config):
         }
         run_agent("reinforcement_learner", reinforce_trainer_config)
 
+        # モデル評価エージェントを呼び出す
+        # 強化学習モデルの評価は、通常、環境でのシミュレーションを通じて行われるため、
+        # ここでは簡略化し、モデルの保存パスとログファイルのみを渡す
+        model_evaluator_config = {
+            "model_path": reinforce_trainer_config["output_path"],
+            "test_data_path": "dummy_path_for_reinforce_evaluation.npz", # 強化学習では通常使わないが引数として必要
+            "evaluation_log_file": os.path.join(PROJECT_ROOT, "logs", "model_evaluation_log.csv")
+        }
+        run_agent("model_evaluator_agent", model_evaluator_config)
+
         # レポート生成エージェントを呼び出す
         report_output_filename = os.path.splitext(os.path.basename(data_file_path))[0] + "_Report.md"
         report_generator_config = {
@@ -137,6 +162,13 @@ def main(args, config):
             "report_output_path": os.path.join(PROJECT_ROOT, report_output_filename)
         }
         run_agent("report_generator_agent", report_generator_config)
+
+        # モデル選択エージェントを呼び出す
+        model_selector_config = {
+            "evaluation_log_file": model_evaluator_config["evaluation_log_file"],
+            "output_best_model_path": os.path.join(PROJECT_ROOT, "trained_models", "best_model_from_meta.txt")
+        }
+        run_agent("model_selector_agent", model_selector_config)
 
     else:
         print(f"警告: 未知のデータタイプ '{predicted_log_type}' が予測されました。学習エージェントは呼び出されません。", file=sys.stderr)
