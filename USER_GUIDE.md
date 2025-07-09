@@ -31,6 +31,26 @@ Yggdrasil Agent Framework は、AI開発プロセスを効率化するための�
 
 MLflowとの統合により、各エージェントの実行（特にモデル学習や評価）におけるパラメータ、メトリクス、生成されたモデルなどの情報を自動的に追跡・記録します。MLflow UIを使用することで、実験結果を視覚的に比較・分析し、再現性を高めることができます。
 
+### CSVタイプ分類
+
+`csv_classifier_agent` を使用して、CSVファイルの構造からそのタイプ（例: MNISTログ、強化学習ログ）を自動的に判別します。
+
+### 自動モデル評価
+
+`model_evaluator_agent` を使用して、学習済みモデルの性能を自動的に評価し、評価結果を記録します。
+
+### 最適なモデル選択
+
+`model_selector_agent` を使用して、評価ログから最適なモデルを自動的に選択します。
+
+### ハイパーパラメータ最適化推奨
+
+`hyperparameter_optimizer_agent` を使用して、モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
+
+### 完全自動化ワークフロー
+
+`meta_trainer_agent` を通じて、「データ判別 → 学習 → 評価 → モデル選択 → ハイパーパラメータ最適化 → レポート生成」という一連のAI開発ワークフローを自動的に実行します。
+
 ## セットアップ
 
 Yggdrasil Agent Framework を使用するためのセットアップ手順は以下の通りです。
@@ -89,76 +109,31 @@ python yggdrasil.py hello_agent
 python yggdrasil.py model_trainer --agent-set epochs=10
 ```
 
-### `hello_agent` の実行例
+### `meta_trainer_agent` の実行例（完全自動化ワークフロー）
 
-`hello_agent` は、フレームワークの動作を確認するためのシンプルなエージェントです。
+`meta_trainer_agent` を使用すると、データセットのタイプを自動判別し、適切なモデルの学習、評価、選択、ハイパーパラメータの推奨、そしてレポート生成までの一連のワークフローを自動的に実行できます。
 
 ```bash
-# 仮想環境をアクティベート
-source .venv/bin/activate
+# MNISTログファイルを使って完全自動化ワークフローを実行
+.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/pipeline_experiment_log.csv
 
-# hello_agent を実行
-python yggdrasil.py hello_agent
-
-# 名前を指定して実行
-python yggdrasil.py hello_agent --agent-set name=Gemini
+# 強化学習ログファイルを使って完全自動化ワークフローを実行
+.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/reinforce_cartpole_log.csv
 ```
 
 ## 主要エージェント
 
 Yggdrasil Agent Framework には、AIワークフローの主要なタスクを実行するためのエージェントが用意されています。
 
-### `model_trainer` の使い方と例
-
-`model_trainer` エージェントは、汎用的な学習スクリプトを実行し、モデルの学習と保存、および結果のロギングを行います。内部的には、`training_scripts/` ディレクトリ内のスクリプト（例: `mnist_trainer.py`, `simple_regression.py`）を呼び出します。
-
-**主なパラメータ:**
-
-*   `script_path`: 実行する学習スクリプトのパス（`training_scripts/` からの相対パス）。
-*   `input_data_path`: 入力データファイルへのパス。
-*   `output_path`: 学習済みモデルの保存先パス。
-*   `epochs`: 学習のエポック数。
-*   `batch_size`: 学習のバッチサイズ。
-
-**実行例:**
-
-```bash
-# MNISTモデルを学習し、結果をMLflowに記録
-python yggdrasil.py model_trainer \
-    --agent-set script_path=training_scripts/mnist_trainer.py \
-    --agent-set input_data_path=data/processed_data.npz \
-    --agent-set output_path=trained_models/my_mnist_model.keras \
-    --agent-set epochs=5 \
-    --agent-set batch_size=64
-```
-
-### `pipeline_orchestrator` の使い方と例
-
-`pipeline_orchestrator` エージェントは、データ前処理、モデル学習、モデル評価といった一連のAIワークフローを自動的に実行します。このエージェントは、内部で他のエージェント（`model_trainer` など）を呼び出します。
-
-**主なパラメータ:**
-
-*   `processed_data_path`: 前処理済みデータの保存先パス。
-*   `trained_model_path`: 学習済みモデルの保存先パス。
-*   `epochs`: 学習ステップに渡すエポック数。
-*   `batch_size`: 学習ステップに渡すバッチサイズ。
-
-**実行例:**
-
-```bash
-# AIワークフローパイプライン全体を実行
-python yggdrasil.py pipeline_orchestrator \
-    --set epochs=3 \
-    --set batch_size=32
-```
-
-このコマンドは、以下のステップを順番に実行します。
-
-1.  `data_preprocessor.py` を使用してデータを生成・前処理。
-2.  `mnist_trainer.py` を使用してモデルを学習。
-3.  `model_evaluator.py` を使用してモデルを評価。
-
-これらのステップは、MLflowの親ランと子ランとして自動的に追跡されます。
+*   `model_trainer`: 汎用的な学習スクリプトを実行し、モデルの学習と保存、および結果のロギングを行います。
+*   `pipeline_orchestrator`: データ前処理、モデル学習、モデル評価といった一連のAIワークフローを自動的に実行します。
+*   `report_generator_agent`: 実験ログ（CSV）を読み込み、論文風のMarkdownレポートを生成します。
+*   `character_image_generator`: テキストから文字画像を生成し、データセットを作成します。
+*   `csv_classifier_agent`: CSVファイルの構造からそのタイプを自動的に判別します。
+*   `model_evaluator_agent`: 学習済みモデルの性能を自動的に評価し、評価結果を記録します。
+*   `model_selector_agent`: 評価ログから最適なモデルを自動的に選択します。
+*   `hyperparameter_optimizer_agent`: モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
+*   `meta_trainer_agent`: データセットのタイプを自動判別し、適切な学習、評価、モデル選択、ハイパーパラメータ最適化、レポート生成までの一連のワークフローを自動的に実行します。
 
 ## MLflow連携
 
@@ -166,7 +141,7 @@ Yggdrasil Agent Framework は、MLflowと密接に連携し、AI実験の追跡�
 
 ### MLflow UIの起動方法
 
-実験結果を視覚的に確認するには、MLflow UIを起動します。プロジェクトのルートディレクトリで、仮想環境をアクティベートしてから以下のコマンドを実行します。
+実験結果を視覚的に確認するには、MLflow UIを起動します。
 
 ```bash
 source .venv/bin/activate
@@ -194,14 +169,28 @@ yggdrasil-agent-framework/
 ├── agents/                 # エージェント定義ファイル
 │   ├── hello_agent.py
 │   ├── model_trainer.py
-│   └── pipeline_orchestrator.py
+│   ├── pipeline_orchestrator.py
+│   ├── report_generator_agent.py
+│   ├── character_image_generator.py
+│   ├── csv_classifier_agent.py
+│   ├── model_evaluator_agent.py
+│   ├── model_selector_agent.py
+│   ├── hyperparameter_optimizer_agent.py
+│   └── meta_trainer_agent.py
+├── config/                 # 設定ファイル
 ├── data/                   # データファイル (生成されたデータなど)
-├── logs/                   # ログファイル (MLflowログ、CSVログなど)
+├── logs/                   # ログファイル (CSVログなど)
+├── mlruns/                 # MLflowのトラッキングデータ
+├── tests/                  # テストファイル
 ├── trained_models/         # 学習済みモデルの保存先
 ├── training_scripts/       # 学習およびデータ処理スクリプト
 │   ├── data_preprocessor.py
 │   ├── mnist_trainer.py
-│   └── model_evaluator.py
+│   ├── model_evaluator.py
+│   ├── character_recognizer.py
+│   ├── csv_classifier_trainer.py
+│   ├── reinforce_cartpole_trainer.py
+│   └── simple_regression.py
 ├── yggdrasil.py            # フレームワークのメインディスパッチャ
 ├── requirements.txt        # Pythonの依存関係リスト
 ├── GEMINI_RESEARCH_LOG.txt # 開発ログ
