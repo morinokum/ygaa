@@ -5,3 +5,4 @@ mlflow
 gymnasium
 scikit-learn
 joblib
+Janome

@@ -26,6 +26,9 @@ def main(args, config):
     test_data_path = config.get("test_data_path", DEFAULT_CONFIG["test_data_path"])
     evaluation_log_file = config.get("evaluation_log_file", DEFAULT_CONFIG["evaluation_log_file"])
 
+    print(f"Debug: model_path (absolute) = {model_path}")
+    print(f"Debug: os.path.exists(model_path) = {os.path.exists(model_path)}")
+
     if not os.path.exists(model_path):
         print(f"エラー: 学習済みモデルが見つかりません: {model_path}", file=sys.stderr)
         return

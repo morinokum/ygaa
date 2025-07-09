@@ -23,33 +23,13 @@ Yggdrasil Agent Framework は、AI開発プロセスを効率化するための�
 
 フレームワークは、独立したPythonスクリプトとして実装された「エージェント」を動的にロードし、実行する機能を提供します。これにより、特定のタスク（例: データ前処理、モデル学習、評価）を実行するエージェントを柔軟に組み合わせて使用できます。
 
-### AIワークフローのオーケストレーション
+### 汎用モデル訓練パイプライン
 
-`pipeline_orchestrator` エージェントを使用することで、複数のエージェントを連携させ、一連のAIワークフロー（例: データ生成 → モデル学習 → モデル評価）を自動的に実行できます。これにより、複雑な開発パイプラインを簡単に構築し、管理できます。
+`generic_training_pipeline_agent` を使用して、様々な種類のモデル（画像分類、テキスト分類、表形式データなど）の訓練、評価、レポート生成を、設定可能なデータセットやハイパーパラメータで行うことができます。
 
 ### MLflow連携による実験管理
 
 MLflowとの統合により、各エージェントの実行（特にモデル学習や評価）におけるパラメータ、メトリクス、生成されたモデルなどの情報を自動的に追跡・記録します。MLflow UIを使用することで、実験結果を視覚的に比較・分析し、再現性を高めることができます。
-
-### CSVタイプ分類
-
-`csv_classifier_agent` を使用して、CSVファイルの構造からそのタイプ（例: MNISTログ、強化学習ログ）を自動的に判別します。
-
-### 自動モデル評価
-
-`model_evaluator_agent` を使用して、学習済みモデルの性能を自動的に評価し、評価結果を記録します。
-
-### 最適なモデル選択
-
-`model_selector_agent` を使用して、評価ログから最適なモデルを自動的に選択します。
-
-### ハイパーパラメータ最適化推奨
-
-`hyperparameter_optimizer_agent` を使用して、モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
-
-### 完全自動化ワークフロー
-
-`meta_trainer_agent` を通じて、「データ判別 → 学習 → 評価 → モデル選択 → ハイパーパラメータ最適化 → レポート生成」という一連のAI開発ワークフローを自動的に実行します。
 
 ## セットアップ
 
@@ -90,10 +70,10 @@ Yggdrasil Agent Framework の基本的な使い方を説明します。
 python yggdrasil.py <エージェント名> [オプション]
 ```
 
-例: `hello_agent` を実行する
+例: `generic_training_pipeline_agent` を実行する
 
 ```bash
-python yggdrasil.py hello_agent
+python yggdrasil.py generic_training_pipeline_agent
 ```
 
 ### 設定の渡し方 (`--set`, `--agent-set`)
@@ -103,37 +83,19 @@ python yggdrasil.py hello_agent
 *   `--set KEY=VALUE`: フレームワーク全体の設定を上書きします。これは、`yggdrasil.py` が読み込むデフォルト設定や、エージェントの設定ファイル（存在する場合）に影響を与えます。
 *   `--agent-set KEY=VALUE`: 実行する特定のエージェントにのみパラメータを渡します。これは、エージェントの `main` 関数に `config` 辞書として渡されます。
 
-例: `model_trainer` エージェントにエポック数を指定して実行する
+例: `generic_training_pipeline_agent` に訓練スクリプトとデータセットを指定して実行する
 
 ```bash
-python yggdrasil.py model_trainer --agent-set epochs=10
-```
-
-### `meta_trainer_agent` の実行例（完全自動化ワークフロー）
-
-`meta_trainer_agent` を使用すると、データセットのタイプを自動判別し、適切なモデルの学習、評価、選択、ハイパーパラメータの推奨、そしてレポート生成までの一連のワークフローを自動的に実行できます。
-
-```bash
-# MNISTログファイルを使って完全自動化ワークフローを実行
-.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/pipeline_experiment_log.csv
-
-# 強化学習ログファイルを使って完全自動化ワークフローを実行
-.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/reinforce_cartpole_log.csv
+python yggdrasil.py generic_training_pipeline_agent --agent-set training_script_path=training_scripts/generic_trainer.py --agent-set dataset_path=data/my_dataset.csv
 ```
 
 ## 主要エージェント
 
 Yggdrasil Agent Framework には、AIワークフローの主要なタスクを実行するためのエージェントが用意されています。
 
+*   `generic_training_pipeline_agent`: 汎用的なモデル訓練パイプラインをオーケストレーションします。
 *   `model_trainer`: 汎用的な学習スクリプトを実行し、モデルの学習と保存、および結果のロギングを行います。
-*   `pipeline_orchestrator`: データ前処理、モデル学習、モデル評価といった一連のAIワークフローを自動的に実行します。
-*   `report_generator_agent`: 実験ログ（CSV）を読み込み、論文風のMarkdownレポートを生成します。
-*   `character_image_generator`: テキストから文字画像を生成し、データセットを作成します。
-*   `csv_classifier_agent`: CSVファイルの構造からそのタイプを自動的に判別します。
 *   `model_evaluator_agent`: 学習済みモデルの性能を自動的に評価し、評価結果を記録します。
-*   `model_selector_agent`: 評価ログから最適なモデルを自動的に選択します。
-*   `hyperparameter_optimizer_agent`: モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
-*   `meta_trainer_agent`: データセットのタイプを自動判別し、適切な学習、評価、モデル選択、ハイパーパラメータ最適化、レポート生成までの一連のワークフローを自動的に実行します。
 
 ## MLflow連携
 
@@ -156,7 +118,7 @@ MLflow UIでは、以下の情報を確認できます。
 
 *   **実験一覧:** 実行されたすべての実験（ラン）が一覧表示されます。
 *   **ランの詳細:** 各ランをクリックすると、そのランで記録されたパラメータ、メトリクス、アーティファクト（モデルファイルなど）の詳細が表示されます。
-*   **ネストされたラン:** `pipeline_orchestrator` のようなパイプライン実行では、親ランの下に各ステップの子ランがネストされて表示されます。これにより、パイプライン全体のパフォーマンスと各ステップの貢献度を一度に確認できます。
+*   **ネストされたラン:** `generic_training_pipeline_agent` のようなパイプライン実行では、親ランの下に各ステップの子ランがネストされて表示されます。これにより、パイプライン全体のパフォーマンスと各ステップの貢献度を一度に確認できます。
 *   **比較:** 複数のランを選択して比較することで、異なるパラメータ設定やモデルのパフォーマンスの違いを分析できます。
 
 ## プロジェクト構造
@@ -166,17 +128,26 @@ Yggdrasil Agent Framework の主要なディレクトリとファイルの構造
 ```
 yggdrasil-agent-framework/
 ├── .venv/                  # 仮想環境ディレクトリ
-├── agents/                 # エージェント定義ファイル
-│   ├── hello_agent.py
+├── agents/                 # 主要エージェント定義ファイル
+│   ├── generic_training_pipeline_agent.py
 │   ├── model_trainer.py
-│   ├── pipeline_orchestrator.py
-│   ├── report_generator_agent.py
-│   ├── character_image_generator.py
+│   └── model_evaluator_agent.py
+├── agents/utilities/       # その他のエージェント（アーカイブ）
 │   ├── csv_classifier_agent.py
-│   ├── model_evaluator_agent.py
-│   ├── model_selector_agent.py
+│   ├── dataset_recommender_agent.py
+│   ├── hello_agent.py
 │   ├── hyperparameter_optimizer_agent.py
-│   └── meta_trainer_agent.py
+│   ├── inference_agent.py
+│   ├── manage_agents.py
+│   ├── meta_trainer_agent.py
+│   ├── model_collection_agent.py
+│   ├── model_selector_agent.py
+│   ├── personal_context_agent.py
+│   ├── pipeline_orchestrator.py
+│   ├── reinforcement_learner.py
+│   ├── report_generator_agent.py
+│   ├── system_health_check_agent.py
+│   └── topic_classifier_agent.py
 ├── config/                 # 設定ファイル
 ├── data/                   # データファイル (生成されたデータなど)
 ├── logs/                   # ログファイル (CSVログなど)
@@ -196,15 +167,6 @@ yggdrasil-agent-framework/
 ├── GEMINI_RESEARCH_LOG.txt # 開発ログ
 └── USER_GUIDE.md           # このユーザーガイド
 ```
-
-*   `yggdrasil.py`: フレームワークのエントリポイント。エージェントのロードと実行を管理します。
-*   `agents/`: 各タスクを実行するエージェントのPythonスクリプトが配置されます。
-*   `training_scripts/`: エージェントによって呼び出される実際の学習、データ処理、評価のロジックが含まれるスクリプトです。
-*   `.venv/`: 仮想環境が作成される場所です。
-*   `data/`, `logs/`, `trained_models/`: 生成されたデータ、ログ、学習済みモデルが保存されるデフォルトの場所です。
-*   `requirements.txt`: プロジェクトの依存関係を定義します。
-*   `GEMINI_RESEARCH_LOG.txt`: 開発の進捗と決定事項を記録したログです。
-*   `USER_GUIDE.md`: このユーザーガイドです。
 
 ## フレームワークの拡張
 
@@ -244,7 +206,7 @@ source .venv/bin/activate
 
 *   引数名が正しいか（例: `--epochs` ではなく `--epoch` となっていないか）。
 *   引数が、そのスクリプトで `argparse` などによって定義されているか。
-*   `pipeline_orchestrator` のように、複数のエージェントを呼び出すエージェントの場合、子エージェントに渡される引数が正しくフィルタリングされているか（例: `data_preprocessor.py` に `parent_run_id` が渡されていないか）。
+*   `generic_training_pipeline_agent` のように、複数のエージェントを呼び出すエージェントの場合、子エージェントに渡される引数が正しくフィルタリングされているか（例: `data_preprocessor.py` に `parent_run_id` が渡されていないか）。
 
 ### MLflow UIで実験が表示されない、または正しくネストされない
 

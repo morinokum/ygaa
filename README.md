@@ -6,6 +6,10 @@ Yggdrasil Agent Framework は、AI開発ワークフローの自動化と実験�
 
 **本フレームワークは、Google Gemini CLIとの連携を前提として設計されており、Gemini CLIを使用することで、対話的にエージェントを実行し、実験をシームレスに管理できます。**
 
+### エージェントの整理と機能の絞り込み
+
+本フレームワークは、モデル学習と評価の核となる機能に焦点を当てるため、エージェントの整理を行いました。主要な機能を提供するエージェントは`agents/`ディレクトリに配置され、より専門的またはユーティリティ的なエージェントは`agents/utilities/`ディレクトリにアーカイブされています。これにより、開発の効率化とフレームワークの目的の明確化を図っています。
+
 ## Gemini CLIとの連携
 
 本フレームワークは、Gemini CLIの強力な対話型インターフェースとコード実行能力を最大限に活用するように設計されています。以下の手順や使用例は、Gemini CLI環境での操作を前提としています。
@@ -18,13 +22,8 @@ Gemini CLIを使用することで、以下のメリットを享受できます�
 ## 主な機能
 
 *   **エージェントの動的実行:** 独立したPythonスクリプトとして実装された「エージェント」を動的にロードし、実行します。
-*   **AIワークフローのオーケストレーション:** `pipeline_orchestrator` エージェントを通じて、データ前処理、モデル学習、評価といった一連のAIワークフローを自動的に実行します。
+*   **汎用モデル訓練パイプライン:** `generic_training_pipeline_agent` を使用して、様々な種類のモデル（画像分類、テキスト分類、表形式データなど）の訓練、評価、レポート生成を、設定可能なデータセットやハイパーパラメータで行うことができます。
 *   **MLflow連携による実験管理:** 各エージェントの実行におけるパラメータ、メトリクス、生成されたモデルなどの情報を自動的に追跡・記録します（MLflow UIで視覚的に確認可能）。
-*   **CSVタイプ分類:** `csv_classifier_agent` を使用して、CSVファイルの構造からそのタイプ（例: MNISTログ、強化学習ログ）を自動的に判別します。
-*   **自動モデル評価:** `model_evaluator_agent` を使用して、学習済みモデルの性能を自動的に評価し、評価結果を記録します。
-*   **最適なモデル選択:** `model_selector_agent` を使用して、評価ログから最適なモデルを自動的に選択します。
-*   **ハイパーパラメータ最適化推奨:** `hyperparameter_optimizer_agent` を使用して、モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
-*   **完全自動化ワークフロー:** `meta_trainer_agent` を通じて、「データ判別 → 学習 → 評価 → モデル選択 → ハイパーパラメータ最適化 → レポート生成」という一連のAI開発ワークフローを自動的に実行します。
 
 ## セットアップ
 
@@ -64,8 +63,8 @@ Gemini CLIのインストールと設定については、Gemini CLIの公式ド
 ### エージェントの実行方法
 
 ```
-# 例: hello_agent を実行
-.venv/bin/python yggdrasil.py hello_agent
+# 例: generic_training_pipeline_agent を実行
+.venv/bin/python yggdrasil.py generic_training_pipeline_agent
 ```
 
 ### パラメータの渡し方 (`--agent-set`)
@@ -73,33 +72,15 @@ Gemini CLIのインストールと設定については、Gemini CLIの公式ド
 エージェントにパラメータを渡すには、`--agent-set KEY=VALUE` オプションを使用します。
 
 ```
-# 例: hello_agent に名前を指定して実行
-.venv/bin/python yggdrasil.py hello_agent --agent-set name=Gemini
-```
-
-### `meta_trainer_agent` の実行例（完全自動化ワークフロー）
-
-`meta_trainer_agent` を使用すると、データセットのタイプを自動判別し、適切なモデルの学習、評価、選択、ハイパーパラメータの推奨、そしてレポート生成までの一連のワークフローを自動的に実行できます。
-
-```
-# MNISTログファイルを使って完全自動化ワークフローを実行
-.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/pipeline_experiment_log.csv
-
-# 強化学習ログファイルを使って完全自動化ワークフローを実行
-.venv/bin/python yggdrasil.py meta_trainer_agent --agent-set data_file_path=logs/reinforce_cartpole_log.csv
+# 例: generic_training_pipeline_agent に訓練スクリプトとデータセットを指定して実行
+.venv/bin/python yggdrasil.py generic_training_pipeline_agent --agent-set training_script_path=training_scripts/generic_trainer.py --agent-set dataset_path=data/my_dataset.csv
 ```
 
 ## 主要エージェント
 
+*   `generic_training_pipeline_agent`: 汎用的なモデル訓練パイプラインをオーケストレーションします。
 *   `model_trainer`: 汎用的な学習スクリプトを実行し、モデルの学習と保存、および結果のロギングを行います。
-*   `pipeline_orchestrator`: データ前処理、モデル学習、モデル評価といった一連のAIワークフローを自動的に実行します。
-*   `report_generator_agent`: 実験ログ（CSV）を読み込み、論文風のMarkdownレポートを生成します。
-*   `character_image_generator`: テキストから文字画像を生成し、データセットを作成します。
-*   `csv_classifier_agent`: CSVファイルの構造からそのタイプを自動的に判別します。
 *   `model_evaluator_agent`: 学習済みモデルの性能を自動的に評価し、評価結果を記録します。
-*   `model_selector_agent`: 評価ログから最適なモデルを自動的に選択します。
-*   `hyperparameter_optimizer_agent`: モデルの評価結果に基づいて次の学習に推奨されるハイパーパラメータを提案します。
-*   `meta_trainer_agent`: データセットのタイプを自動判別し、適切な学習、評価、モデル選択、ハイパーパラメータ最適化、レポート生成までの一連のワークフローを自動的に実行します。
 
 ## MLflow連携
 
@@ -120,17 +101,26 @@ Yggdrasil Agent Framework は、MLflowと密接に連携し、AI実験の追跡�
 ```
 yggdrasil-agent-framework/
 ├── .venv/                  # 仮想環境ディレクトリ
-├── agents/                 # エージェント定義ファイル
-│   ├── hello_agent.py
+├── agents/                 # 主要エージェント定義ファイル
+│   ├── generic_training_pipeline_agent.py
 │   ├── model_trainer.py
-│   ├── pipeline_orchestrator.py
-│   ├── report_generator_agent.py
-│   ├── character_image_generator.py
+│   └── model_evaluator_agent.py
+├── agents/utilities/       # その他のエージェント（アーカイブ）
 │   ├── csv_classifier_agent.py
-│   ├── model_evaluator_agent.py
-│   ├── model_selector_agent.py
+│   ├── dataset_recommender_agent.py
+│   ├── hello_agent.py
 │   ├── hyperparameter_optimizer_agent.py
-│   └── meta_trainer_agent.py
+│   ├── inference_agent.py
+│   ├── manage_agents.py
+│   ├── meta_trainer_agent.py
+│   ├── model_collection_agent.py
+│   ├── model_selector_agent.py
+│   ├── personal_context_agent.py
+│   ├── pipeline_orchestrator.py
+│   ├── reinforcement_learner.py
+│   ├── report_generator_agent.py
+│   ├── system_health_check_agent.py
+│   └── topic_classifier_agent.py
 ├── config/                 # 設定ファイル
 ├── data/                   # データファイル (生成されたデータなど)
 ├── logs/                   # ログファイル (CSVログなど)
@@ -143,7 +133,8 @@ yggdrasil-agent-framework/
 │   ├── model_evaluator.py
 │   ├── character_recognizer.py
 │   ├── csv_classifier_trainer.py
-│   └── reinforce_cartpole_trainer.py
+│   ├── reinforce_cartpole_trainer.py
+│   └── simple_regression.py
 ├── yggdrasil.py            # フレームワークのメインディスパッチャ
 ├── requirements.txt        # Pythonの依存関係リスト
 ├── GEMINI_RESEARCH_LOG.txt # 開発ログ
